@@ -1,57 +1,71 @@
 import logo from '../icons/apple-icon.svg'
 import { getProducts, getPrices } from '../lib/airtable'
-// import type { Record, Product, Price } from '../lib/airtable'
-import { createResource, createSignal, For, Show } from 'solid-js'
-import type { JSXElement, Setter, Accessor } from 'solid-js'
+import { createResource, createSignal, ErrorBoundary, For, Show, Suspense } from 'solid-js'
+import type { Setter, Accessor } from 'solid-js'
 import clsx from 'clsx'
 
 interface PricesTableProps {
   filter: Accessor<string>
 }
 
-function PricesTable({ filter }: PricesTableProps): JSXElement {
+function PricesTable({ filter }: PricesTableProps) {
   const [prices] = createResource(getPrices)
   const [products] = createResource(getProducts)
 
-  if (products.error || prices.error) {
-    return <p>Error loading prices</p>
-  }
+  const loadingView = (
+    <div class='w-full grid place-items-center'>
+      <img src={logo} class='w-10 h-10 animate-spin' alt='logo' />
+    </div>
+  )
 
-  // if (products.loading) {
-  //   return <img src={logo} class='w-10 h-10 animate-spin' alt='logo' />
-  // }
+  const fallbackView = (err, reset: () => void) => (
+    <div class='w-full grid place-items-center'>
+      <p>Something went wrong:</p>
+      <pre>{String(err)}</pre>
+      <button onClick={reset} class='border rounded bg-yellow-50 hover:bg-yellow-100 px-2'>
+        Try again
+      </button>
+    </div>
+  )
 
   return (
-    <div class='m-2 border w-full rounded-2xl shadow-md'>
-      <div class='grid grid-cols-2 p-1'>
-        <p class='text-center border-r'>Название</p>
-        <p class='text-center'>Цена</p>
-      </div>
-      <For
-        each={products() ?? []}
-        fallback={
-          <div class='w-full grid place-items-center'>
-            <img src={logo} class='w-10 h-10 animate-spin' alt='logo' />
+    <ErrorBoundary fallback={fallbackView}>
+      <Suspense fallback={loadingView}>
+        <div class='m-2 border w-full rounded-2xl shadow-md overflow-hidden'>
+          <div class='grid grid-cols-2 p-1'>
+            <p class='text-center border-r'>Название</p>
+            <p class='text-center'>Цена, ₽</p>
           </div>
-        }
-      >
-        {(product, index) => (
-          <Show when={product?.fields?.Name?.toLocaleLowerCase().includes(filter())}>
-            <div
-              class={clsx(
-                'grid grid-cols-2 hover:bg-yellow-100 border-t p-1',
-                !(index() % 2) && 'bg-yellow-50',
-              )}
-            >
-              <p class='border-r px-2'>{product.fields.Name}</p>
-              <p class='px-2'>
-                {prices()?.find(price => price.id === product.fields.PricesRef?.[0])?.fields.Price}
-              </p>
-            </div>
-          </Show>
-        )}
-      </For>
-    </div>
+          <For
+            each={products()}
+            fallback={
+              <div class='w-full grid place-items-center'>
+                <img src={logo} class='w-10 h-10 animate-spin' alt='logo' />
+              </div>
+            }
+          >
+            {(product, index) => (
+              <Show when={product?.fields?.Name?.toLocaleLowerCase().includes(filter())}>
+                <div
+                  class={clsx(
+                    'grid grid-cols-2 hover:bg-yellow-100 border-t p-1',
+                    !(index() % 2) && 'bg-yellow-50',
+                  )}
+                >
+                  <p class='border-r px-2'>{product.fields.Name}</p>
+                  <p class='px-2'>
+                    {
+                      prices()?.find(price => price.id === product.fields.PricesRef?.[0])?.fields
+                        .Price
+                    }
+                  </p>
+                </div>
+              </Show>
+            )}
+          </For>
+        </div>
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
@@ -68,7 +82,7 @@ function SearchBar({ setFilter }: { setFilter: Setter<string> }) {
   )
 }
 
-export function PricesPage(): JSXElement {
+export function PricesPage() {
   const [filter, setFilter] = createSignal('')
 
   return (
