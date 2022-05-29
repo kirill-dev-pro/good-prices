@@ -21,7 +21,13 @@
     "vite-plugin-windicss": "^1.8.4"
   },
   "dependencies": {
+    "@hope-ui/solid": "^0.6.1",
+    "@stitches/core": "^1.2.8",
     "clsx": "^1.1.1",
-    "solid-js": "^1.4.2"
+    "firebase": "^9.8.2",
+    "solid-js": "^1.4.2",
+    "solid-transition-group": "^0.0.10",
+    "solid-zustand": "^1.4.0",
+    "zustand": "^4.0.0-rc.1"
   }
 }

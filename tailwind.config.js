@@ -5,6 +5,9 @@ module.exports = {
       gridTemplateRows: {
         layout: 'auto 1fr auto',
       },
+      gridTemplateColumns: {
+        layout: 'auto 1fr auto',
+      },
     },
   },
   plugins: [],
